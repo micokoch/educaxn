@@ -77,3 +77,88 @@ QR <- qr(X)
 Q <- qr.Q(QR)
 R <- qr.R(QR)
 backsolve(R,crossprod(Q,y)) # backsolve is more stable
+
+###
+# Matrix algebra example exercises
+X <- matrix(c(1,1,1,1,0,0,1,1),nrow=4)
+rownames(X) <- c("a","a","b","b")
+
+beta <- c(5, 2)
+
+y <- X %*% beta
+# Answer
+fitted = X %*% beta
+fitted[ 1:2, ]
+
+# Answer
+fitted = X %*% beta
+fitted[ 3:4, ]
+
+###
+# Inference Review Exercises
+RNGkind("Mersenne-Twister", "Inversion", "Rejection")
+
+# Monte Carlo simulation
+g = 9.8 ## meters per second
+h0 = 56.67
+v0 = 0
+n = 25
+tt = seq(0,3.4,len=n) ##time in secs, t is a base function
+y = h0 + v0 *tt  - 0.5* g*tt^2 + rnorm(n,sd=1)
+
+# Model: y = b0 + b1 t + b2 t^2 + e
+
+X = cbind(1,tt,tt^2)
+A = solve(crossprod(X))%*%t(X)
+
+# 1. What is the LSE of g (g=-2*b2)
+# r <- y - X %*% Beta
+# RSS3 <- t(r) %*% r
+# RSS4 <- crossprod(r)
+# betahat4 <- solve(crossprod(X)) %*% crossprod(X,y)
+betahats <- A %*% y
+(ghat <- -2*betahats[3])
+# A%*%y gives us the LSE for all three coefficients
+
+# 2. Set the seed to 1, then use the code above in conjunction with the function 
+# replicate() to generate 100,000 Monte Carlo simulated datasets. For each dataset 
+# compute an estimate of g (remember to multiply by -2).
+# What is the standard deviation of this estimate?:
+
+set.seed(1)
+n = 25
+wk2ex2 <- function(n){
+  g = 9.8
+  h0 = 56.67
+  v0 = 0
+  tt = seq(0,3.4,len=n)
+  y = h0 + v0 *tt  - 0.5* g*tt^2 + rnorm(n,sd=1)
+  X = cbind(1,tt,tt^2)
+  A = solve(crossprod(X))%*%t(X)
+  betahats <- A %*% y
+  ghat <- -2*betahats[3]
+  ghat
+}
+ghunthous <- replicate(100000, wk2ex2(n))
+sd(ghunthous)
+# [1] 0.429747
+
+# Official answer
+set.seed(1)
+B = 100000
+g = 9.8 ## meters per second
+n = 25
+tt = seq(0,3.4,len=n) ##time in secs, t is a base function
+X = cbind(1,tt,tt^2)
+A = solve(crossprod(X))%*%t(X)
+
+betahat = replicate(B,{
+  y = 56.67  - 0.5*g*tt^2 + rnorm(n,sd=1)
+  betahats = -2*A%*%y
+  return(betahats[3])
+})
+sqrt(mean( (betahat-mean(betahat) )^2))
+# [1] 0.4297449
+
+
+
